@@ -15,7 +15,7 @@ import urllib.request
 import tkinter as tk
 from tkinter import ttk
 
-GITHUB_REPO = 'BaiZiDog/RandomNamePicker'
+GITHUB_REPO = 'BaiZiDog/helper-test'
 BASE_DIR = os.path.dirname(os.path.abspath(sys.executable if getattr(sys, 'frozen', False) else __file__))
 MAIN_EXE = os.path.join(BASE_DIR, 'RandomNamePicker.exe')
 
