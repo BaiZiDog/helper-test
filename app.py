@@ -368,12 +368,6 @@ HTML = r"""<!DOCTYPE html>
 </style>
 </head>
 <body>
-  <div id="jp-toggle" style="position:fixed;top:1.5vh;left:1.5vw;z-index:99;display:flex;align-items:center;gap:0.8vh;cursor:pointer;user-select:none;" title="整活模式：用日语朗读中文名字">
-    <span style="font-size:1.6vh;color:rgba(255,255,255,0.6);">整活</span>
-    <div style="width:3.5vh;height:2vh;background:rgba(255,255,255,0.2);border-radius:1vh;position:relative;transition:background 0.3s;" id="jp-track">
-      <div style="width:1.6vh;height:1.6vh;background:#fff;border-radius:50%;position:absolute;top:0.2vh;left:0.2vh;transition:transform 0.3s,background 0.3s;" id="jp-thumb"></div>
-    </div>
-  </div>
   <div class="wrap">
     <h1>随 机 点 名</h1>
     <div id="display" class="display"></div>
@@ -395,6 +389,7 @@ HTML = r"""<!DOCTYPE html>
       <button id="edit-btn">编辑内容</button>
       <button id="add-btn">浏览添加</button>
       <button id="del-btn" class="del-btn">删除</button>
+      <button id="jp-btn" style="display:none;">整活</button>
     </div>
   </div>
 <script>
@@ -415,9 +410,9 @@ HTML = r"""<!DOCTYPE html>
   var voiceEnabled = true;  // 语音朗读开关
   var voiceBtn = document.getElementById('voice-btn');
   var jpEnabled = false;  // 整活模式（日语朗读）
-  var jpToggle = document.getElementById('jp-toggle');
-  var jpTrack = document.getElementById('jp-track');
-  var jpThumb = document.getElementById('jp-thumb');
+  var jpBtn = document.getElementById('jp-btn');
+  var voiceTapCount = 0;      // 连点"语音"计数
+  var voiceTapTimer = null;   // 连点判定窗口
 
   var DESCRIPTIONS = {
     normal:  '完全随机抽取，可能连续抽到同一人',
@@ -460,25 +455,35 @@ HTML = r"""<!DOCTYPE html>
     window.pywebview.api.toggle_fullscreen();
   });
 
-  // 语音朗读
+  // 语音朗读开关（整活开启时仍保留完整功能）
   voiceBtn.addEventListener('click', function () {
     voiceEnabled = !voiceEnabled;
     voiceBtn.textContent = voiceEnabled ? ' 语音' : '静音';
     voiceBtn.style.opacity = voiceEnabled ? '1' : '0.5';
+    // 连点三下"语音"：在名单选择界面显示隐藏的"整活"选项
+    voiceTapCount++;
+    clearTimeout(voiceTapTimer);
+    voiceTapTimer = setTimeout(function () { voiceTapCount = 0; }, 600);
+    if (voiceTapCount >= 3) {
+      voiceTapCount = 0;
+      clearTimeout(voiceTapTimer);
+      jpBtn.style.display = '';
+    }
   });
 
   // 整活模式（日语朗读中文名字）
-  jpToggle.addEventListener('click', function () {
-    jpEnabled = !jpEnabled;
-    if (jpEnabled) {
-      jpTrack.style.background = 'rgba(255,200,100,0.5)';
-      jpThumb.style.transform = 'translateX(1.5vh)';
-      jpThumb.style.background = '#ffc864';
+  function setJpEnabled(on) {
+    jpEnabled = on;
+    if (on) {
+      jpBtn.textContent = '关闭';
+      jpBtn.style.display = '';
     } else {
-      jpTrack.style.background = 'rgba(255,255,255,0.2)';
-      jpThumb.style.transform = 'translateX(0)';
-      jpThumb.style.background = '#fff';
+      jpBtn.textContent = '整活';
+      jpBtn.style.display = 'none';
     }
+  }
+  jpBtn.addEventListener('click', function () {
+    setJpEnabled(!jpEnabled);
   });
 
   // 预加载语音列表（异步）
